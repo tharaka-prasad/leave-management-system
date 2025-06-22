@@ -19,14 +19,15 @@ use Illuminate\Support\Facades\Route;
 Route::post('register', [RegisteredUserController::class, 'store']);
 Route::post('login', [RegisteredUserController::class, 'login']);
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware('auth:sanctum')->get('user', function (Request $request) {
     return $request->user();
 });
 Route::middleware(['auth:sanctum'])->group(function () {
 
-    Route::get('/leaves', [leaveController::class, 'index']);
-    Route::post('/leaves', [LeaveController::class, 'store']);
-    Route::put('/leaves/{id}/update', [LeaveController::class, 'update']);
-    Route::put('/leaves/{id}/updateStatus', [LeaveController::class, 'updateStatus']);
-    Route::delete('/leaves/{id}/delete', [LeaveController::class, 'destroy']);
+    Route::get('leaves', [leaveController::class, 'index']);
+    Route::get('leaves', [leaveController::class, 'currentUserRecords']);
+    Route::post('leaves', [LeaveController::class, 'store']);
+    Route::put('leaves/{id}/update', [LeaveController::class, 'update']);
+    Route::put('leaves/{id}/updateStatus', [LeaveController::class, 'updateStatus']);
+    Route::delete('leaves/{id}/delete', [LeaveController::class, 'destroy']);
 });

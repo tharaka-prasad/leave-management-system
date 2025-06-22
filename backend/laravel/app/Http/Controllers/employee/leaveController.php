@@ -38,6 +38,30 @@ class leaveController extends Controller
         return response()->json($record, 200);
     }
 
+    public function currentUserRecords()
+    {
+        $user = auth()->user();
+
+        $record = $this->leaveInterface->All()
+            ->where('created_by_id', $user->id)
+            ->sortByDesc('created_at')
+            ->sortByDesc('updated_at')
+            ->values();
+
+        $record = $record->map(function ($leave) {
+            try {
+                $creator              = $this->userInterface->getById($leave->created_by_id);
+                $leave->createdByUser = $creator ?? (object) ['name' => 'Unknown', 'id' => null];
+            } catch (\Exception $e) {
+                $leave->createdByUser = 'Unknown';
+            }
+
+            return $leave;
+        });
+
+        return response()->json($record, 200);
+    }
+
     public function store(LeaveRequest $request)
     {
 
