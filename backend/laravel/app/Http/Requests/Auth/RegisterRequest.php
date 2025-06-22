@@ -11,7 +11,7 @@ class RegisterRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,23 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+        'first_name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'email' => 'required|string|email|unique:users,email',
+        'employee_id' => 'required|string|unique:users,employee_id',
+        'password' => 'required|string|min:6|confirmed',
+    ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'first_name.required' => 'First name is required.',
+            'last_name.required' => 'Last name is required.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Invalid email format.',
+            'employee_id.required' => 'Employee ID is required.',
+            'password.required' => 'Password is required.',
         ];
     }
 }

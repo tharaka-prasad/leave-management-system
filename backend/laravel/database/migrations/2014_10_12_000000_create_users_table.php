@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('employee_id')->nullable();
             $table->enum('role', ['admin', 'employee'])->default('employee');
+            $table->boolean('availability')->default(1);
             $table->rememberToken();
             $table->timestamps();
         });

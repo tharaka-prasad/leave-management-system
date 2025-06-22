@@ -5,5 +5,5 @@ use App\Repositories\Base\EloquentRepositoryInterface;
 
 interface UserInterface extends EloquentRepositoryInterface
 {
-
+    public function findByEmail(string $email);
 }

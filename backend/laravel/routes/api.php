@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\employee\leaveController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +16,17 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::post('register', [RegisteredUserController::class, 'store']);
+Route::post('login', [RegisteredUserController::class, 'login']);
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+Route::middleware(['auth:sanctum'])->group(function () {
+
+    Route::get('/leaves', [leaveController::class, 'index']);
+    Route::post('/leaves', [LeaveController::class, 'store']);
+    Route::put('/leaves/{id}/update', [LeaveController::class, 'update']);
+    Route::put('/leaves/{id}/updateStatus', [LeaveController::class, 'updateStatus']);
+    Route::delete('/leaves/{id}/delete', [LeaveController::class, 'destroy']);
 });
