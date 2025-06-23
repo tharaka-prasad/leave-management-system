@@ -43,3 +43,29 @@ export async function login({
   });
   return res.data;
 }
+
+export async function register({
+  first_name,
+  last_name,
+  email,
+  employee_id,
+  password,
+  password_confirmation,
+}: {
+  first_name: string;
+  last_name: string;
+  email: string;
+  employee_id: string;
+  password: string;
+  password_confirmation: string;
+}) {
+  const res = await axios.post("/api/register", {
+    first_name,
+    last_name,
+    email,
+    employee_id,
+    password,
+    password_confirmation,
+  });
+  return res.data;
+}

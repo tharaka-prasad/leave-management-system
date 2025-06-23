@@ -4,6 +4,7 @@ import queryClient from "../../state/queryClient";
 import { enqueueSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
 import { login } from "../../api/userApi";
+import useCurrentUser from "../../utils/useCurrentUser";
 
 export default function LoginPage() {
   const {
@@ -17,8 +18,14 @@ export default function LoginPage() {
       password: "",
     },
   });
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
+  const { user } = useCurrentUser();
+  if (user?.role == "admin") {
+    navigate("/dashboard");
+  } else if (user) {
+    navigate("/home");
+  }
 
   const { mutate: loginMutation, isPending } = useMutation({
     mutationFn: login,
@@ -26,7 +33,11 @@ export default function LoginPage() {
       queryClient.invalidateQueries({ queryKey: ["current-user"] });
       localStorage.setItem("token", data?.access_token);
       enqueueSnackbar("Welcome Back!", { variant: "success" });
-      navigate("/home");
+      if (data?.role === "admin") {
+        navigate("/dashboard")
+      } else if (data?.role === "employee") {
+        navigate("/home")
+      };
     },
     onError: () => {
       enqueueSnackbar(`Login Failed`, {
@@ -107,9 +118,10 @@ export default function LoginPage() {
 
           <button
             type="submit"
+            disabled={isPending}
             className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium"
           >
-            Sign In
+            {isPending ? "Signing In..." : "Sign In"}
           </button>
         </form>
 
