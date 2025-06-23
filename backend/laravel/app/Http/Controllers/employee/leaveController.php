@@ -77,7 +77,7 @@ class leaveController extends Controller
         $record = $this->leaveInterface->create($validatedData);
 
         return response()->json([
-            'message' => 'Attrition record created successfully!',
+            'message' => 'Leave record created successfully!',
             'record'  => $record,
         ], 201);
     }
@@ -87,7 +87,7 @@ class leaveController extends Controller
         $record = $this->leaveInterface->findById($id);
 
         if (! $record) {
-            return response()->json(['message' => 'Attrition record not found.'], 404);
+            return response()->json(['message' => 'Leave record not found.'], 404);
         }
 
         $validatedData = $request->validated();
@@ -95,7 +95,7 @@ class leaveController extends Controller
 
         if ($updated) {
             return response()->json([
-                'message' => 'Attrition record updated successfully!',
+                'message' => 'Leave record updated successfully!',
                 'record'  => $this->leaveInterface->findById($id),
             ], 200);
         } else {
