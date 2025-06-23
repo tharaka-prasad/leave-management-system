@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\userController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\employee\leaveController;
@@ -25,10 +26,13 @@ Route::middleware('auth:sanctum')->get('user', function (Request $request) {
 });
 Route::middleware(['auth:sanctum'])->group(function () {
 
+    Route::get('all-users', [userController::class, 'allUsers']);
+
     Route::get('leaves', [leaveController::class, 'index']);
     Route::get('leaves-current-user', [leaveController::class, 'currentUserRecords']);
     Route::post('leaves', [LeaveController::class, 'store']);
     Route::put('leaves/{id}/update', [LeaveController::class, 'update']);
     Route::put('leaves/{id}/updateStatus', [LeaveController::class, 'updateStatus']);
     Route::delete('leaves/{id}/delete', [LeaveController::class, 'destroy']);
+    Route::get('leave-stats', [LeaveController::class, 'leaveStats']);
 });

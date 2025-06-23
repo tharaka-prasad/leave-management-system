@@ -46,3 +46,13 @@ export async function updateLeaveStatus(id: number | string, status: "approved" 
         throw error;
     }
 }
+
+export async function getLeaveStats(): Promise<{
+  total: number;
+  approved: number;
+  pending: number;
+  rejected: number;
+}> {
+  const res = await axios.get("/api/leave-stats");
+  return res.data;
+}

@@ -90,6 +90,10 @@ class leaveController extends Controller
             return response()->json(['message' => 'Leave record not found.'], 404);
         }
 
+        if ($record->status !== 'pending') {
+            return response()->json(['message' => 'Only pending leave records can be updated.'], 403);
+        }
+
         $validatedData = $request->validated();
         $updated       = $this->leaveInterface->update($id, $validatedData);
 
@@ -99,7 +103,7 @@ class leaveController extends Controller
                 'record'  => $this->leaveInterface->findById($id),
             ], 200);
         } else {
-            return response()->json(['message' => 'Failed to update the attrition record.'], 500);
+            return response()->json(['message' => 'Failed to update the leave record.'], 500);
         }
     }
 
@@ -126,6 +130,20 @@ class leaveController extends Controller
         return response()->json([
             'message' => $deleted ? 'Record deleted successfully!' : 'Failed to delete record.',
         ], $deleted ? 200 : 500);
+    }
+
+    public function leaveStats()
+    {
+        $total    = $this->leaveInterface->All()->count();
+        $approved = $this->leaveInterface->All()->where('status', 'approved')->count();
+        $pending  = $this->leaveInterface->All()->where('status', 'pending')->count();
+        $rejected = $this->leaveInterface->All()->where('status', 'rejected')->count();
+        return response()->json([
+            'total'    => $total,
+            'approved' => $approved,
+            'pending'  => $pending,
+            'rejected' => $rejected,
+        ]);
     }
 
 }

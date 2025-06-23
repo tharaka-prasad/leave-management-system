@@ -1,53 +1,52 @@
 import { useState } from "react";
-import axios from "axios";
-import {
-  FileText,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-} from "lucide-react";
-import { getAllLeaves, getLeaves, updateLeaveStatus } from "../../api/leaveApi";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import AddLeaveModal from "../../componenets/LeaveFormComponent";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { FileText, BarChart3, CheckCircle, XCircle, AlertCircle, Users } from "lucide-react";
+import { getAllLeaves, updateLeaveStatus, type LeaveList } from "../../api/leaveApi";
 import { enqueueSnackbar } from "notistack";
 import queryClient from "../../state/queryClient";
+import axios from "axios";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts';
+
+
+type User = {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: string;
+  status: string;
+};
 
 export default function UserLeaveDashboard() {
-  const [selectedTab, setSelectedTab] = useState("my_leaves");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTab, setSelectedTab] = useState<"my_leaves" | "stats" | "users">("my_leaves");
 
-  const { data: leavesData, refetch, isLoading, isError, error } = useQuery({
+  const { data: leavesData, refetch, isLoading, isError, error } = useQuery<LeaveList>({
     queryKey: ["leave-details"],
     queryFn: getAllLeaves,
   });
 
-  const handleLeaveSubmit = async (formData: {
-    type: string;
-    startDate: string;
-    endDate: string;
-    reason: string;
-  }) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        "http://127.0.0.1:8000/api/leaves",
-        {
-          leave_type: formData.type,
-          start_date: formData.startDate,
-          end_date: formData.endDate,
-          reason: formData.reason,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      setIsModalOpen(false);
-      await refetch(); // refresh data
-    } catch (err) {
-      console.error("Failed to submit leave:", err);
-    }
+  const { data: usersData, isLoading: loadingUsers, isError: errorUsers } = useQuery<User[]>({
+    queryKey: ["all-users"],
+    queryFn: async () => {
+      const res = await axios.get("/api/all-users");
+      return res.data;
+    },
+  });
+
+  const { mutate: mutateLeaveStatus } = useMutation({
+    mutationFn: ({ id, status }: { id: number | string; status: "approved" | "rejected" }) =>
+      updateLeaveStatus(id, status),
+    onSuccess: (_data, variables) => {
+      enqueueSnackbar(`Leave ${variables.status}`, { variant: "success" });
+      queryClient.invalidateQueries({ queryKey: ["leave-details"] });
+    },
+    onError: () => {
+      enqueueSnackbar("Failed to update leave status", { variant: "error" });
+    },
+  });
+
+  const handleAction = (id: number | string, status: "approved" | "rejected") => {
+    mutateLeaveStatus({ id, status });
   };
 
   const getStatusIcon = (status: string) => {
@@ -76,97 +75,72 @@ export default function UserLeaveDashboard() {
     }
   };
 
-  const { mutate: mutateLeaveStatus, isPending } = useMutation({
-    mutationFn: ({ id, status }: { id: number | string; status: "approved" | "rejected" }) =>
-      updateLeaveStatus(id, status),
-    onSuccess: (_data, variables) => {
-      enqueueSnackbar(`Leave ${variables.status}`, { variant: "success" });
-      queryClient.invalidateQueries({ queryKey: ["leave-details"] }); 
-    },
-    onError: () => {
-      enqueueSnackbar("Failed to update leave status", { variant: "error" });
-    },
-  });
-  const handleAction = (id: number | string, status: "approved" | "rejected") => {
-    mutateLeaveStatus({ id, status });
-  };
-
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex space-x-1 bg-white p-1 rounded-xl shadow-lg mb-8">
+
+        <div className="flex space-x-2 bg-white p-2 rounded-xl shadow-lg mb-8">
           <button
             onClick={() => setSelectedTab("my_leaves")}
             className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${selectedTab === "my_leaves"
-              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-              : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               }`}
           >
             <FileText className="w-5 h-5" />
             <span>My Leaves</span>
           </button>
+
+          <button
+            onClick={() => setSelectedTab("stats")}
+            className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${selectedTab === "stats"
+                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              }`}
+          >
+            <BarChart3 className="w-5 h-5" />
+            <span>Leave Stats</span>
+          </button>
+
+          <button
+            onClick={() => setSelectedTab("users")}
+            className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${selectedTab === "users"
+                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              }`}
+          >
+            <Users className="w-5 h-5" />
+            <span>Users</span>
+          </button>
         </div>
 
-        {isLoading && <p>Loading...</p>}
-        {isError && (
-          <p className="text-red-500">
-            {(error as any)?.message || "Error fetching leaves"}
-          </p>
-        )}
 
         {selectedTab === "my_leaves" && (
           <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              My Leave Requests
-            </h2>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
-            >
-              + Add Leave
-            </button>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">My Leave Requests</h2>
 
-            {/* Modal Component */}
-            <AddLeaveModal
-              isOpen={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              onSubmit={handleLeaveSubmit}
-            />
+            {isLoading && <p className="text-blue-600">Loading...</p>}
+            {isError && (
+              <p className="text-red-600">{(error as any)?.message || "Error fetching leaves"}</p>
+            )}
 
-            <div className="overflow-x-auto mt-6">
-              <table className="w-full">
-                <thead className="bg-gray-50">
+            <div className="overflow-x-auto mt-4">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Start Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      End Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                      Action
-                    </th>
+                    <th className="px-6 py-3 text-left">Type</th>
+                    <th className="px-6 py-3 text-left">Start</th>
+                    <th className="px-6 py-3 text-left">End</th>
+                    <th className="px-6 py-3 text-left">Status</th>
+                    <th className="px-6 py-3 text-left">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {leavesData?.map((leave: any) => (
+                  {leavesData?.map((leave) => (
                     <tr key={leave.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {leave.leave_type}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {leave.start_date}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {leave.end_date}
-                      </td>
+                      <td className="px-6 py-4">{leave.leave_type}</td>
+                      <td className="px-6 py-4">{leave.start_date}</td>
+                      <td className="px-6 py-4">{leave.end_date}</td>
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
@@ -177,7 +151,7 @@ export default function UserLeaveDashboard() {
                           <span className="ml-1 capitalize">{leave.status}</span>
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
+                      <td className="px-6 py-4">
                         <button
                           className="text-green-600 hover:underline mr-2"
                           onClick={() => handleAction(leave.id, "approved")}
@@ -191,7 +165,6 @@ export default function UserLeaveDashboard() {
                           Reject
                         </button>
                       </td>
-
                     </tr>
                   ))}
                 </tbody>
@@ -199,6 +172,68 @@ export default function UserLeaveDashboard() {
             </div>
           </div>
         )}
+
+        {selectedTab === "stats" && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Leave Statistics</h2>
+
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={[
+                  { name: 'Approved', value: leavesData?.filter((l) => l.status === "approved").length ?? 0 },
+                  { name: 'Pending', value: leavesData?.filter((l) => l.status === "pending").length ?? 0 },
+                  { name: 'Rejected', value: leavesData?.filter((l) => l.status === "rejected").length ?? 0 },
+                ]}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" fill="#3b82f6" /> 
+              </BarChart>
+
+              <div className="text-center text-xl text-gray-900 text-border-t ">
+                <p className="text-gray-600 mb-4">Total Leaves: {leavesData?.length}</p>
+              </div>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {selectedTab === "users" && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center space-x-2">
+              <Users className="w-6 h-6 text-indigo-600" />
+              <span>All Users</span>
+            </h2>
+
+            {loadingUsers && <p className="text-gray-600">Loading users...</p>}
+            {errorUsers && <p className="text-red-600">Failed to load users</p>}
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+                  <tr>
+                    <th className="px-6 py-3 text-left">Name</th>
+                    <th className="px-6 py-3 text-left">Email</th>
+                    <th className="px-6 py-3 text-left">Role</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {usersData?.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">{user.first_name} {user.last_name}</td>
+                      <td className="px-6 py-4">{user.email}</td>
+                      <td className="px-6 py-4 capitalize">{user.role}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
