@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('employee_id');
             $table->string('leave_type');
-            $table->date('start_date');
-            $table->date('end_date');
+            $table->string('start_date');
+            $table->string('end_date');
             $table->text('reason');
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending'); $table->timestamps();
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->integer('created_by_id')->nullable();
             $table->timestamps();
         });

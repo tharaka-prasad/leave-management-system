@@ -2,6 +2,8 @@
 namespace App\Http\Requests\leave;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class LeaveRequest extends FormRequest
 {
@@ -22,9 +24,9 @@ class LeaveRequest extends FormRequest
     {
         return [
             'employee_id' => 'required|exists:users,employee_id',
-            'leave_type'  => 'required|in:annual,sick,unpaid',
-            'start_date'  => 'required|date|after_or_equal:today',
-            'end_date'    => 'required|date|after_or_equal:start_date',
+            'leave_type'  => 'required|string',
+            'start_date'  => 'required|string|after_or_equal:today',
+            'end_date'    => 'required|string|after_or_equal:start_date',
             'reason'      => 'required|string|max:1000',
         ];
     }
@@ -34,9 +36,19 @@ class LeaveRequest extends FormRequest
         return [
             'employee_id.required'      => 'Employee ID is required.',
             'employee_id.exists'        => 'Employee not found.',
-            'leave_type.in'             => 'Valid types: annual, sick, unpaid.',
+            'leave_type.required'       => 'Leave type is required.',
             'start_date.after_or_equal' => 'Start date must be today or later.',
             'end_date.after_or_equal'   => 'End date must be after or same as start date.',
         ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(
+            response()->json([
+                'message' => 'Validation failed',
+                'errors'  => $validator->errors(),
+            ], 422)
+        );
     }
 }

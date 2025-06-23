@@ -3,6 +3,9 @@
 namespace App\Http\Requests\Leave;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Contracts\Validation\Validator;
+
 
 class LeaveStatusUpdateRequest extends FormRequest
 {
@@ -32,5 +35,15 @@ class LeaveStatusUpdateRequest extends FormRequest
             'status.required' => 'Status is required.',
             'status.in' => 'Valid status: approved, rejected.',
         ];
+    }
+
+     protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(
+            response()->json([
+                'message' => 'Validation failed',
+                'errors'  => $validator->errors(),
+            ], 422)
+        );
     }
 }

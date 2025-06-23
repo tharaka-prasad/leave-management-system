@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\employee\leaveController;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('register', [RegisteredUserController::class, 'store']);
-Route::post('login', [RegisteredUserController::class, 'login']);
+Route::post('login', [LoginController::class, 'login']);
 
 Route::middleware('auth:sanctum')->get('user', function (Request $request) {
     return $request->user();
