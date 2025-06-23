@@ -72,7 +72,7 @@ class leaveController extends Controller
 
         $userId                         = $user->id;
         $validatedData                  = $request->validated();
-        $validatedData['createdByUser'] = $userId;
+        $validatedData['created_by_id'] = $userId;
 
         $record = $this->leaveInterface->create($validatedData);
 

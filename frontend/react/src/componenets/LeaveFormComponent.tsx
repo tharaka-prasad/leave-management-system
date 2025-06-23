@@ -1,70 +1,52 @@
-import React, { useState } from "react";
+import React from "react";
 import { Dialog } from "@headlessui/react";
 import { useMutation } from "@tanstack/react-query";
-import { createLeave } from "../api/leaveApi";
-import { leaveSchema } from "../api/leaveApi"; // adjust import if needed
-import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { enqueueSnackbar } from "notistack";
+import queryClient from "../state/queryClient";
+import { createLeaveRecord, type Leave } from "../api/leaveApi";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
 };
 
+type LeaveFormInput = Pick<
+  Leave,
+  "employee_id" | "leave_type" | "start_date" | "end_date" | "reason"
+>;
+
 const AddLeaveModal: React.FC<Props> = ({ isOpen, onClose }) => {
-  const [leaveType, setLeaveType] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [reason, setReason] = useState("");
-  const [employeeId, setEmployeeId] = useState(""); // required by schema
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<LeaveFormInput>({
+    mode: "onChange",
+  });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const mutation = useMutation({
-    mutationFn: createLeave,
+  const { mutate: createLeaveListReportMutation, isPending } = useMutation({
+    mutationFn: createLeaveRecord,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leave-details"] });
+      enqueueSnackbar("Leave Created Successfully!", { variant: "success" });
+      reset();
       onClose();
-      setLeaveType("");
-      setStartDate("");
-      setEndDate("");
-      setReason("");
-      setEmployeeId("");
-      setErrors({});
     },
-    onError: (error: any) => {
-      console.error("Error submitting leave:", error);
+    onError: () => {
+      enqueueSnackbar("Leave creation failed", { variant: "error" });
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const rawData = {
-      id: 0, // backend usually ignores this on create
-      employee_id: employeeId,
-      leave_type: leaveType,
-      start_date: startDate,
-      end_date: endDate,
-      reason: reason,
-      status: "pending", // default on creation
+  const onSubmit = (data: LeaveFormInput) => {
+    createLeaveListReportMutation({
+      ...data,
+      status: "pending",
       created_by_id: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    };
-
-    const result = leaveSchema.safeParse(rawData);
-
-    if (!result.success) {
-      const fieldErrors: Record<string, string> = {};
-      result.error.errors.forEach((err) => {
-        if (err.path[0]) {
-          fieldErrors[err.path[0] as string] = err.message;
-        }
-      });
-      setErrors(fieldErrors);
-      return;
-    }
-
-    mutation.mutate(result.data);
+    });
   };
 
   return (
@@ -73,61 +55,65 @@ const AddLeaveModal: React.FC<Props> = ({ isOpen, onClose }) => {
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
           <Dialog.Title className="text-lg font-semibold mb-4">Add Leave</Dialog.Title>
-
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <label className="block text-sm font-medium">Employee ID</label>
               <input
                 type="text"
+                {...register("employee_id", { required: "Employee ID is required" })}
                 className="w-full border rounded p-2"
-                value={employeeId}
-                onChange={(e) => setEmployeeId(e.target.value)}
               />
-              {errors.employee_id && <p className="text-sm text-red-500">{errors.employee_id}</p>}
+              {errors.employee_id && (
+                <p className="text-sm text-red-500">{errors.employee_id.message}</p>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium">Leave Type</label>
               <input
                 type="text"
+                {...register("leave_type", { required: "Leave type is required" })}
                 className="w-full border rounded p-2"
-                value={leaveType}
-                onChange={(e) => setLeaveType(e.target.value)}
               />
-              {errors.leave_type && <p className="text-sm text-red-500">{errors.leave_type}</p>}
+              {errors.leave_type && (
+                <p className="text-sm text-red-500">{errors.leave_type.message}</p>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium">Start Date</label>
               <input
                 type="date"
+                {...register("start_date", { required: "Start date is required" })}
                 className="w-full border rounded p-2"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
               />
-              {errors.start_date && <p className="text-sm text-red-500">{errors.start_date}</p>}
+              {errors.start_date && (
+                <p className="text-sm text-red-500">{errors.start_date.message}</p>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium">End Date</label>
               <input
                 type="date"
+                {...register("end_date", { required: "End date is required" })}
                 className="w-full border rounded p-2"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
               />
-              {errors.end_date && <p className="text-sm text-red-500">{errors.end_date}</p>}
+              {errors.end_date && (
+                <p className="text-sm text-red-500">{errors.end_date.message}</p>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium">Reason</label>
               <textarea
+                {...register("reason", { required: "Reason is required" })}
                 className="w-full border rounded p-2"
                 rows={3}
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-              ></textarea>
-              {errors.reason && <p className="text-sm text-red-500">{errors.reason}</p>}
+              />
+              {errors.reason && (
+                <p className="text-sm text-red-500">{errors.reason.message}</p>
+              )}
             </div>
 
             <div className="flex justify-end gap-2">
@@ -140,10 +126,10 @@ const AddLeaveModal: React.FC<Props> = ({ isOpen, onClose }) => {
               </button>
               <button
                 type="submit"
-                disabled={mutation.isLoading}
+                disabled={isPending}
                 className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
               >
-                {mutation.isLoading ? "Submitting..." : "Submit"}
+                {isPending ? "Submitting..." : "Submit"}
               </button>
             </div>
           </form>

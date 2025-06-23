@@ -26,7 +26,7 @@ Route::middleware('auth:sanctum')->get('user', function (Request $request) {
 Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('leaves', [leaveController::class, 'index']);
-    Route::get('leaves', [leaveController::class, 'currentUserRecords']);
+    Route::get('leaves-current-user', [leaveController::class, 'currentUserRecords']);
     Route::post('leaves', [LeaveController::class, 'store']);
     Route::put('leaves/{id}/update', [LeaveController::class, 'update']);
     Route::put('leaves/{id}/updateStatus', [LeaveController::class, 'updateStatus']);
