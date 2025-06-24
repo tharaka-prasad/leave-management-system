@@ -28,7 +28,7 @@ export default function RegisterPage() {
     onSuccess: (data) => {
       enqueueSnackbar("Account created!", { variant: "success" });
       queryClient.invalidateQueries({ queryKey: ["current-user"] });
-      navigate("/login");
+      navigate("/");
     },
     onError: (error: any) => {
       const message = error?.response?.data?.message || "Registration failed";

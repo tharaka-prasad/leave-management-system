@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { Dialog } from "@headlessui/react";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
@@ -27,17 +27,20 @@ const EditLeaveModal: React.FC<Props> = ({ isOpen, onClose, leave }) => {
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<LeaveFormInput>({
-    defaultValues: {
-      employee_id: leave.employee_id,
-      leave_type: leave.leave_type,
-      start_date: leave.start_date,
-      end_date: leave.end_date,
-      reason: leave.reason,
-    },
-  });
-  const [selectedLeave, setSelectedLeave] = useState<any | null>(null);
+    setError,
+  } = useForm<LeaveFormInput>();
 
+  useEffect(() => {
+    if (leave) {
+      reset({
+        employee_id: leave.employee_id,
+        leave_type: leave.leave_type,
+        start_date: leave.start_date,
+        end_date: leave.end_date,
+        reason: leave.reason,
+      });
+    }
+  }, [leave, reset]);
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: LeaveFormInput) => updateLeaveRecord(leave.id, data),
@@ -48,10 +51,20 @@ const EditLeaveModal: React.FC<Props> = ({ isOpen, onClose, leave }) => {
       onClose();
     },
     onError: (error: any) => {
-      enqueueSnackbar(
-        error?.response?.data?.message || "Failed to update leave.",
-        { variant: "error" }
-      );
+      if (error?.response?.status === 422) {
+        const backendErrors = error.response.data.errors;
+        Object.keys(backendErrors).forEach((field) => {
+          setError(field as keyof LeaveFormInput, {
+            type: "server",
+            message: backendErrors[field][0],
+          });
+        });
+      } else {
+        enqueueSnackbar(
+          error?.response?.data?.message || "Failed to update leave.",
+          { variant: "error" }
+        );
+      }
     },
   });
 

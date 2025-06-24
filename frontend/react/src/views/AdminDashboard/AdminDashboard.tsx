@@ -83,8 +83,8 @@ export default function UserLeaveDashboard() {
           <button
             onClick={() => setSelectedTab("my_leaves")}
             className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${selectedTab === "my_leaves"
-                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+              : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               }`}
           >
             <FileText className="w-5 h-5" />
@@ -94,8 +94,8 @@ export default function UserLeaveDashboard() {
           <button
             onClick={() => setSelectedTab("stats")}
             className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${selectedTab === "stats"
-                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+              : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               }`}
           >
             <BarChart3 className="w-5 h-5" />
@@ -105,8 +105,8 @@ export default function UserLeaveDashboard() {
           <button
             onClick={() => setSelectedTab("users")}
             className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${selectedTab === "users"
-                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+              : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               }`}
           >
             <Users className="w-5 h-5" />
@@ -132,6 +132,7 @@ export default function UserLeaveDashboard() {
                     <th className="px-6 py-3 text-left">Start</th>
                     <th className="px-6 py-3 text-left">End</th>
                     <th className="px-6 py-3 text-left">Status</th>
+                    <th className="px-6 py-3 text-left">Created By</th>
                     <th className="px-6 py-3 text-left">Action</th>
                   </tr>
                 </thead>
@@ -151,6 +152,8 @@ export default function UserLeaveDashboard() {
                           <span className="ml-1 capitalize">{leave.status}</span>
                         </span>
                       </td>
+                      <td className="px-6 py-4">{leave.createdByUser.first_name + " " + leave.createdByUser.last_name}</td>
+
                       <td className="px-6 py-4">
                         <button
                           className="text-green-600 hover:underline mr-2"
@@ -191,7 +194,7 @@ export default function UserLeaveDashboard() {
                 <YAxis allowDecimals={false} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="value" fill="#3b82f6" /> 
+                <Bar dataKey="value" fill="#3b82f6" />
               </BarChart>
 
               <div className="text-center text-xl text-gray-900 text-border-t ">

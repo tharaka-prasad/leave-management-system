@@ -27,11 +27,11 @@ export async function getLeaves() {
     const parsed = leaveListSchema.parse(res.data);
     return parsed;
 }
-export async function getAllLeaves() {
-    const res = await axios.get("/api/leaves");
-    const parsed = leaveListSchema.parse(res.data);
-    return parsed;
-}
+// export async function getAllLeaves() {
+//     const res = await axios.get("/api/leaves");
+//     const parsed = leaveListSchema.parse(res.data);
+//     return parsed;
+// }
 
 export const createLeaveRecord = async (data: LeaveList) => {
     const res = await axios.post("/api/leaves", data);
@@ -66,6 +66,11 @@ export async function getLeaveStats(): Promise<{
 
 export async function getMyLeaves() {
     const res = await axios.get("/api/leaves-current-user")
+    return res.data;
+}
+
+export async function getAllLeaves() {
+    const res = await axios.get("/api/leaves")
     return res.data;
 }
 

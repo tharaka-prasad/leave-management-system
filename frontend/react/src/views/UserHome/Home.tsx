@@ -137,7 +137,7 @@ const LeavesPage: React.FC = () => {
                         {leave.status}
                       </span>
                     </td>
-                    <td className="px-4 py-2">{leave.created_by_id}</td>
+                    <td className="px-4 py-2">{leave.createdByUser.first_name + " " + leave.createdByUser.last_name}</td>
                     <td className="px-6 py-4">
                       <button
                         className="text-green-600 hover:underline mr-2 disabled:text-gray-400 disabled:cursor-not-allowed"

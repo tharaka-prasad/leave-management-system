@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -17,11 +17,14 @@ type LeaveFormInput = Pick<
 >;
 
 const AddLeaveModal: React.FC<Props> = ({ isOpen, onClose }) => {
+  const [formErrors, setFormErrors] = useState<string[]>([]); // ✅ Top-level error summary
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    setError,
   } = useForm<LeaveFormInput>({
     mode: "onChange",
   });
@@ -31,11 +34,30 @@ const AddLeaveModal: React.FC<Props> = ({ isOpen, onClose }) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leave-details"] });
       enqueueSnackbar("Leave Created Successfully!", { variant: "success" });
+      setFormErrors([]); // clear summary errors
       reset();
       onClose();
     },
-    onError: () => {
-      enqueueSnackbar("Leave creation failed", { variant: "error" });
+    onError: (error: any) => {
+      const responseErrors = error?.response?.data?.errors;
+
+      if (responseErrors) {
+        // Loop through each field's errors
+        Object.entries(responseErrors).forEach(([field, messages]) => {
+          if (Array.isArray(messages)) {
+            messages.forEach((msg) =>
+              enqueueSnackbar(`${field.replace(/_/g, ' ')}: ${msg}`, {
+                variant: "error",
+              })
+            );
+          }
+        });
+      } else {
+        enqueueSnackbar(
+          error?.response?.data?.message || "Leave creation failed",
+          { variant: "error" }
+        );
+      }
     },
   });
 
@@ -55,16 +77,35 @@ const AddLeaveModal: React.FC<Props> = ({ isOpen, onClose }) => {
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
           <Dialog.Title className="text-lg font-semibold mb-4">Add Leave</Dialog.Title>
+
+          {/* ✅ Error summary */}
+          {formErrors.length > 0 && (
+            <div className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700">
+              <strong className="block font-semibold mb-1">
+                Please fix the following:
+              </strong>
+              <ul className="list-disc pl-5 space-y-1">
+                {formErrors.map((msg, index) => (
+                  <li key={index}>{msg}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <label className="block text-sm font-medium">Employee ID</label>
               <input
                 type="text"
-                {...register("employee_id", { required: "Employee ID is required" })}
+                {...register("employee_id", {
+                  required: "Employee ID is required",
+                })}
                 className="w-full border rounded p-2"
               />
               {errors.employee_id && (
-                <p className="text-sm text-red-500">{errors.employee_id.message}</p>
+                <p className="text-sm text-red-500">
+                  {errors.employee_id.message}
+                </p>
               )}
             </div>
 
@@ -72,11 +113,15 @@ const AddLeaveModal: React.FC<Props> = ({ isOpen, onClose }) => {
               <label className="block text-sm font-medium">Leave Type</label>
               <input
                 type="text"
-                {...register("leave_type", { required: "Leave type is required" })}
+                {...register("leave_type", {
+                  required: "Leave type is required",
+                })}
                 className="w-full border rounded p-2"
               />
               {errors.leave_type && (
-                <p className="text-sm text-red-500">{errors.leave_type.message}</p>
+                <p className="text-sm text-red-500">
+                  {errors.leave_type.message}
+                </p>
               )}
             </div>
 
@@ -84,11 +129,15 @@ const AddLeaveModal: React.FC<Props> = ({ isOpen, onClose }) => {
               <label className="block text-sm font-medium">Start Date</label>
               <input
                 type="date"
-                {...register("start_date", { required: "Start date is required" })}
+                {...register("start_date", {
+                  required: "Start date is required",
+                })}
                 className="w-full border rounded p-2"
               />
               {errors.start_date && (
-                <p className="text-sm text-red-500">{errors.start_date.message}</p>
+                <p className="text-sm text-red-500">
+                  {errors.start_date.message}
+                </p>
               )}
             </div>
 
@@ -96,23 +145,31 @@ const AddLeaveModal: React.FC<Props> = ({ isOpen, onClose }) => {
               <label className="block text-sm font-medium">End Date</label>
               <input
                 type="date"
-                {...register("end_date", { required: "End date is required" })}
+                {...register("end_date", {
+                  required: "End date is required",
+                })}
                 className="w-full border rounded p-2"
               />
               {errors.end_date && (
-                <p className="text-sm text-red-500">{errors.end_date.message}</p>
+                <p className="text-sm text-red-500">
+                  {errors.end_date.message}
+                </p>
               )}
             </div>
 
             <div>
               <label className="block text-sm font-medium">Reason</label>
               <textarea
-                {...register("reason", { required: "Reason is required" })}
+                {...register("reason", {
+                  required: "Reason is required",
+                })}
                 className="w-full border rounded p-2"
                 rows={3}
               />
               {errors.reason && (
-                <p className="text-sm text-red-500">{errors.reason.message}</p>
+                <p className="text-sm text-red-500">
+                  {errors.reason.message}
+                </p>
               )}
             </div>
 

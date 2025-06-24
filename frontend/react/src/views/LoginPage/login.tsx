@@ -130,7 +130,7 @@ export default function LoginPage() {
             Don't have an account?
             <button
               type="button"
-              onClick={() => console.log("Sign up clicked")}
+              onClick={() => navigate("/register")}
               className="font-medium text-blue-600 hover:text-blue-500 transition duration-200 bg-transparent border-none cursor-pointer ml-1"
             >
               Sign up
