@@ -30,9 +30,5 @@ class UserSeeder extends Seeder
             'role' => 'employee',
             'password' => bcrypt('password'),
         ]);
-
-        User::factory(3)->create([
-            'role' => 'employee',
-        ]);
     }
 }

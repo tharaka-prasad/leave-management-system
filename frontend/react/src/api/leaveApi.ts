@@ -55,11 +55,21 @@ export async function updateLeaveStatus(id: number | string, status: "approved" 
 }
 
 export async function getLeaveStats(): Promise<{
-  total: number;
-  approved: number;
-  pending: number;
-  rejected: number;
+    total: number;
+    approved: number;
+    pending: number;
+    rejected: number;
 }> {
-  const res = await axios.get("/api/leave-stats");
-  return res.data;
+    const res = await axios.get("/api/leave-stats");
+    return res.data;
+}
+
+export async function getMyLeaves() {
+    const res = await axios.get("/api/leaves-current-user")
+    return res.data;
+}
+
+export async function deleteMyLeaves(id: string | number) {
+    const res = await axios.delete(`/api/leaves/${id}/delete`)
+    return res.data;
 }

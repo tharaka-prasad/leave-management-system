@@ -1,21 +1,71 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getLeaves } from "../../api/leaveApi";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { deleteMyLeaves, getLeaves, getMyLeaves } from "../../api/leaveApi";
 import AddLeaveModal from "../../componenets/LeaveFormComponent";
 import { FileText } from "lucide-react";
 import EditLeaveModal from "../../componenets/EditLeaveModal";
+import { closeSnackbar, enqueueSnackbar } from "notistack";
+import queryClient from "../../state/queryClient";
 
 const LeavesPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState("my_leaves");
   const [selectedLeave, setSelectedLeave] = useState<any | null>(null);
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const { mutate: deleteLeaveMutation, isPending: isDeletePending } = useMutation({
+    mutationFn: deleteMyLeaves,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leave-details"] });
+      enqueueSnackbar("Leave deleted successfully", { variant: "success" });
+
+    },
+    onError: () => {
+      enqueueSnackbar("Failed to delete leave", { variant: "error" });
+    },
+  });
+
+  const handleDeleteClick = (id: number) => {
+  enqueueSnackbar("Are you sure you want to delete this leave?", {
+    variant: "warning",
+    persist: true, // Keeps the snackbar until manually closed
+    action: (snackbarId) => (
+      <div>
+        <button
+          onClick={() => {
+            deleteLeaveMutation(id); // Call mutation
+            closeSnackbar(snackbarId);
+          }}
+          className="text-red-600 font-semibold mr-2"
+        >
+          Yes
+        </button>
+        <button
+          onClick={() => closeSnackbar(snackbarId)}
+          className="text-gray-500 font-semibold"
+        >
+          No
+        </button>
+      </div>
+    ),
+  });
+};
+
+  const handleEditClick = (leave: any) => {
+    setSelectedLeave(leave);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedLeave(null);
+  };
 
   const { data: leavesData, isLoading, isError, error } = useQuery({
     queryKey: ["leave-details"],
-    queryFn: getLeaves,
+    queryFn: getMyLeaves,
   });
-
 
 
   return (
@@ -49,11 +99,6 @@ const LeavesPage: React.FC = () => {
           {isLoading && (
             <p className="text-blue-600 text-sm">Loading leave requests...</p>
           )}
-          {isError && (
-            <p className="text-red-600 text-sm">
-              {(error as any)?.message || "Failed to load leave data."}
-            </p>
-          )}
 
           <div className="overflow-x-auto mt-4">
             <table className="w-full text-sm text-left">
@@ -67,7 +112,7 @@ const LeavesPage: React.FC = () => {
                   <th className="px-4 py-3">Reason</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Created By</th>
-                  <th className="px-4 py-3">Created At</th>
+                  <th className="px-4 py-3">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -82,25 +127,47 @@ const LeavesPage: React.FC = () => {
                     <td className="px-4 py-2 capitalize font-medium">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-semibold
-                          ${leave.status === "approved"
+                    ${leave.status === "approved"
                             ? "bg-green-100 text-green-800"
                             : leave.status === "rejected"
                               ? "bg-red-100 text-red-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }
-                        `}
+                              : "bg-yellow-100 text-yellow-800"}
+                  `}
                       >
                         {leave.status}
                       </span>
                     </td>
                     <td className="px-4 py-2">{leave.created_by_id}</td>
-                    <td className="px-4 py-2">
-                      {new Date(leave.created_at).toLocaleString()}
+                    <td className="px-6 py-4">
+                      <button
+                        className="text-green-600 hover:underline mr-2 disabled:text-gray-400 disabled:cursor-not-allowed"
+                        onClick={() => handleEditClick(leave)}
+                        disabled={leave.status === "approved" || leave.status === "rejected"}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="text-red-600 hover:underline disabled:text-gray-400 disabled:cursor-not-allowed"
+                        disabled={leave.status === "approved" || leave.status === "rejected" || isDeletePending}
+                        onClick={() => handleDeleteClick(leave.id)}
+                      >
+                        Delete
+                      </button>
+
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+
+            {/* Edit Modal */}
+            {selectedLeave && (
+              <EditLeaveModal
+                isOpen={isEditModalOpen}
+                onClose={handleCloseModal}
+                leave={selectedLeave}
+              />
+            )}
           </div>
         </div>
 
