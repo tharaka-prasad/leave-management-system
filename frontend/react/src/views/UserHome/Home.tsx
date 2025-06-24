@@ -3,47 +3,47 @@ import { useQuery } from "@tanstack/react-query";
 import { getLeaves } from "../../api/leaveApi";
 import AddLeaveModal from "../../componenets/LeaveFormComponent";
 import { FileText } from "lucide-react";
+import EditLeaveModal from "../../componenets/EditLeaveModal";
 
 const LeavesPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-   const [selectedTab, setSelectedTab] = useState("my_leaves");
+  const [selectedTab, setSelectedTab] = useState("my_leaves");
+  const [selectedLeave, setSelectedLeave] = useState<any | null>(null);
+
 
   const { data: leavesData, isLoading, isError, error } = useQuery({
     queryKey: ["leave-details"],
     queryFn: getLeaves,
   });
 
-  
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-<div className="flex justify-between items-center mb-6">
-  {/* Left: Tabs */}
-  <div className="flex space-x-2">
-    <button
-      onClick={() => setSelectedTab("my_leaves")}
-      className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
-        selectedTab === "my_leaves"
-          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-      }`}
-    >
-      <FileText className="w-5 h-5" />
-      <span>My Leaves</span>
-    </button>
-  </div>
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setSelectedTab("my_leaves")}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${selectedTab === "my_leaves"
+                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                }`}
+            >
+              <FileText className="w-5 h-5" />
+              <span>My Leaves</span>
+            </button>
+          </div>
 
-  {/* Right: Add Leave */}
-  <div>
-    <button
-      onClick={() => setIsModalOpen(true)}
-      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:text-blue-100 text-white px-5 py-2 rounded-lg shadow hover:shadow-md transition"
-    >
-      + Add Leave
-    </button>
-  </div>
-</div>
+          <div>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:text-blue-100 text-white px-5 py-2 rounded-lg shadow hover:shadow-md transition"
+            >
+              + Add Leave
+            </button>
+          </div>
+        </div>
 
         <div className="bg-white rounded-2xl shadow-lg p-6">
           {isLoading && (
@@ -82,10 +82,9 @@ const LeavesPage: React.FC = () => {
                     <td className="px-4 py-2 capitalize font-medium">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-semibold
-                          ${
-                            leave.status === "approved"
-                              ? "bg-green-100 text-green-800"
-                              : leave.status === "rejected"
+                          ${leave.status === "approved"
+                            ? "bg-green-100 text-green-800"
+                            : leave.status === "rejected"
                               ? "bg-red-100 text-red-800"
                               : "bg-yellow-100 text-yellow-800"
                           }
@@ -105,8 +104,14 @@ const LeavesPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Modal */}
         <AddLeaveModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+        {selectedLeave && (
+          <EditLeaveModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            leave={selectedLeave}
+          />
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { z } from "zod";
+import { userSchema } from "./userApi";
 
 export const leaveSchema = z.object({
     id: z.number(),
@@ -11,6 +12,7 @@ export const leaveSchema = z.object({
     reason: z.string(),
     status: z.enum(["pending", "approved", "rejected"]),
     created_by_id: z.number().nullable(),
+    createdByUser: userSchema,
     created_at: z.string(),
     updated_at: z.string(),
 });
@@ -34,6 +36,11 @@ export async function getAllLeaves() {
 export const createLeaveRecord = async (data: LeaveList) => {
     const res = await axios.post("/api/leaves", data);
     console.log(data);
+    return res.data;
+};
+
+export const updateLeaveRecord = async (id: number | string, data: LeaveList) => {
+    const res = await axios.put(`/api/leaves/${id}/update`, data);
     return res.data;
 };
 
